@@ -8,10 +8,14 @@
     "start": "next start"
   },
   "dependencies": {
+    "@metaplex-foundation/js": "^0.20.1",
+    "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
+    "@solana/web3.js": "^1.98.2",
     "firebase": "^10.0.0",
     "framer-motion": "^12.12.1",
     "lucide-react": "^0.511.0",
     "next": "^13.5.11",
+    "nft.storage": "^7.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

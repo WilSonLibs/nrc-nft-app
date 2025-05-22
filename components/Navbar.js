@@ -39,6 +39,7 @@ export default function Navbar() {
           <li><Link href="/register" className="hover:text-gray-300">Register</Link></li>
           <li><Link href="/verify" className="hover:text-gray-300">Verify</Link></li>
           <li><Link href="/mint" className="hover:text-gray-300">Mint</Link></li>
+          <li><Link href="/my-nfts" className="hover:text-gray-300">My NFTs</Link></li>
           {!user ? (
             <li><Link href="/login" className="hover:text-gray-300">Login</Link></li>
           ) : (
@@ -57,6 +58,7 @@ export default function Navbar() {
             <li><Link href="/register" onClick={() => setIsOpen(false)}>Register</Link></li>
             <li><Link href="/verify" onClick={() => setIsOpen(false)}>Verify</Link></li>
             <li><Link href="/mint" onClick={() => setIsOpen(false)}>Mint</Link></li>
+            <li><Link href="/my-nfts" onClick={() => setIsOpen(false)}>My NFTs</Link></li>
             {!user ? (
               <li><Link href="/login" onClick={() => setIsOpen(false)}>Login</Link></li>
             ) : (
