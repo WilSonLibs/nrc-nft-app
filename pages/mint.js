@@ -1,6 +1,8 @@
 // pages/mint.js
 import { useEffect, useState } from 'react';
-import { db } from '../lib/firebase';
+import { useRouter } from 'next/router';
+import { auth, db } from '../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 
@@ -9,7 +11,20 @@ export default function MintPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const router = useRouter();
   const usersPerPage = 6;
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      if (!user) {
+        router.push('/login');
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -39,15 +54,26 @@ export default function MintPage() {
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   const paginate = pageNumber => setCurrentPage(pageNumber);
 
-  if (loading) {
+  const maskNRC = nrc => {
+    if (!nrc || nrc.length < 3) return '***';
+    return '*'.repeat(nrc.length - 3) + nrc.slice(-3);
+  };
+
+  const maskDOB = () => '****-**-**';
+  const maskAddress = address => {
+    if (!address || address.length < 5) return '***';
+    return address.slice(0, 3) + '****' + address.slice(-2);
+
+  };
+
+  if (checkingAuth || loading) {
     return (
       <p className="text-center mt-10 text-gray-700">
-        Loading registered users...
+        {checkingAuth ? 'Checking authentication...' : 'Loading registered users...'}
       </p>
     );
   }
@@ -78,9 +104,9 @@ export default function MintPage() {
             transition={{ delay: index * 0.1 }}
           >
             <h2 className="text-xl font-semibold mb-2">{user.fullName}</h2>
-            <p><strong>NRC:</strong> {user.nrcNumber}</p>
-            <p><strong>DOB:</strong> {user.dateOfBirth}</p>
-            <p><strong>Address:</strong> {user.address}</p>
+            <p><strong>NRC:</strong> {maskNRC(user.nrcNumber)}</p>
+            <p><strong>DOB:</strong> {maskDOB()}</p>
+            <p><strong>Address:</strong> {maskAddress(user.address)}</p>
             <p className="text-sm text-gray-500 mt-2">UserID: {user.userId}</p>
 
             <button

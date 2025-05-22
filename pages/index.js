@@ -37,6 +37,18 @@ export default function Home() {
     fetchUsers();
   }, []);
 
+  const maskNRC = (nrc) => {
+    if (!nrc || nrc.length < 3) return '***';
+    return '*'.repeat(nrc.length - 3) + nrc.slice(-3);
+  };
+
+  const maskDOB = () => '****-**-**';
+
+  const maskAddress = (address) => {
+    if (!address || address.length < 5) return '***';
+    return address.slice(0, 3) + '****' + address.slice(-2);
+  };
+
   if (checkingAuth) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
@@ -57,7 +69,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-100 py-10">
         <div className="max-w-6xl mx-auto px-6">
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
-            Welcome to the NRC NFT App
+            Make Your NRC and NFT
           </h1>
           <p className="text-center text-gray-600 mb-12">
             Use this platform to verify and manage your NRC on the blockchain.
@@ -68,9 +80,9 @@ export default function Home() {
             {users.map((user) => (
               <div key={user.id} className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="text-xl font-semibold mb-2">{user.fullName}</h2>
-                <p><strong>NRC:</strong> {user.nrcNumber}</p>
-                <p><strong>DOB:</strong> {user.dateOfBirth}</p>
-                <p><strong>Address:</strong> {user.address}</p>
+                <p><strong>NRC:</strong> {maskNRC(user.nrcNumber)}</p>
+                <p><strong>DOB:</strong> {maskDOB()}</p>
+                <p><strong>Address:</strong> {maskAddress(user.address)}</p>
               </div>
             ))}
           </div>
