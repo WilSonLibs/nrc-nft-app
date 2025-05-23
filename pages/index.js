@@ -1,26 +1,55 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { db } from '../lib/firebase';
+import { useAuth } from '../lib/AuthContext';
 import Link from 'next/link';
 import Head from 'next/head';
 
 export default function Home() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [users, setUsers] = useState([]);
-  const [walletAddress, setWalletAddress] = useState(null);
+  const { user, setWalletAddress } = useAuth(); // Using AuthContext
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.push('/login');
-      } else {
-        setCheckingAuth(false);
-      }
-    });
+    if (!user) {
+      router.push('/login');
+    } else {
+      setCheckingAuth(false);
+    }
+  }, [user]);
 
+  const connectWallet = async () => {
+    const provider = window?.phantom?.solana;
+    if (provider) {
+      try {
+        const resp = await provider.connect();
+        setWalletAddress(resp.publicKey.toString());
+      } catch (err) {
+        console.error('Wallet connection failed:', err);
+      }
+    } else {
+      alert('Phantom wallet not found. Please install it.');
+    }
+  };
+
+  return (
+    <>
+      <Head>
+        <title>Home</title>
+      </Head>
+      <main>
+        {!checkingAuth && (
+          <>
+            <button onClick={connectWallet}>Connect Wallet</button>
+            {/* Other UI components */}
+          </>
+        )}
+      </main>
+    </>
+  );
+}
     return () => unsubscribeAuth();
   }, [router]);
 
