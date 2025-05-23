@@ -9,9 +9,10 @@ import Head from 'next/head';
 export default function Home() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [users, setUsers] = useState([]);
-  const { user, setWalletAddress } = useAuth(); // Using AuthContext
+  const { user, setWalletAddress, walletAddress } = useAuth(); // useAuth
   const router = useRouter();
 
+  // Authentication check
   useEffect(() => {
     if (!user) {
       router.push('/login');
@@ -20,39 +21,7 @@ export default function Home() {
     }
   }, [user]);
 
-  const connectWallet = async () => {
-    const provider = window?.phantom?.solana;
-    if (provider) {
-      try {
-        const resp = await provider.connect();
-        setWalletAddress(resp.publicKey.toString());
-      } catch (err) {
-        console.error('Wallet connection failed:', err);
-      }
-    } else {
-      alert('Phantom wallet not found. Please install it.');
-    }
-  };
-
-  return (
-    <>
-      <Head>
-        <title>Home</title>
-      </Head>
-      <main>
-        {!checkingAuth && (
-          <>
-            <button onClick={connectWallet}>Connect Wallet</button>
-            {/* Other UI components */}
-          </>
-        )}
-      </main>
-    </>
-  );
-}
-    return () => unsubscribeAuth();
-  }, [router]);
-
+  // Fetch users from Firestore
   useEffect(() => {
     const fetchUsers = async () => {
       const q = query(collection(db, 'nrc_submissions'), limit(3));
@@ -67,6 +36,7 @@ export default function Home() {
     fetchUsers();
   }, []);
 
+  // Connect Phantom Wallet
   const connectWallet = async () => {
     if (typeof window !== 'undefined') {
       const isPhantomInstalled = window.solana?.isPhantom;
@@ -90,6 +60,7 @@ export default function Home() {
     }
   };
 
+  // Mint NFT
   const handleMint = async (user) => {
     if (!walletAddress) {
       alert('Connect your wallet first');
@@ -120,6 +91,7 @@ export default function Home() {
     }
   };
 
+  // Helpers to mask user data
   const maskNRC = (nrc) => {
     if (!nrc || nrc.length < 3) return '***';
     return '*'.repeat(nrc.length - 3) + nrc.slice(-3);
@@ -132,6 +104,7 @@ export default function Home() {
     return address.slice(0, 3) + '****' + address.slice(-2);
   };
 
+  // Show loader while checking auth
   if (checkingAuth) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
@@ -142,68 +115,68 @@ export default function Home() {
       </div>
     );
   }
-return (
-  <>
-    <Head>
-      <title>NRC NFT App</title>
-    </Head>
 
-    <div className="min-h-screen bg-gray-100 py-10">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Make Your NRC An NFT</h1>
-        </div>
+  return (
+    <>
+      <Head>
+        <title>NRC NFT App</title>
+      </Head>
 
-        <p className="text-center text-gray-600 mb-4">
-          Use this platform to verify and manage your NRC on the blockchain.
-        </p>
+      <div className="min-h-screen bg-gray-100 py-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-800">Make Your NRC An NFT</h1>
+          </div>
 
-        {/* Connect button positioned below the paragraph */}
-        <div className="text-center mb-12">
-          {!walletAddress ? (
-            <button
-              onClick={connectWallet}
-              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-900 transition duration-200"
+          <p className="text-center text-gray-600 mb-4">
+            Use this platform to verify and manage your NRC on the blockchain.
+          </p>
+
+          <div className="text-center mb-12">
+            {!walletAddress ? (
+              <button
+                onClick={connectWallet}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-900 transition duration-200"
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <p className="text-sm text-gray-600 truncate max-w-xs mx-auto">
+                Connected: {walletAddress}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
+            {users.map((user) => (
+              <div key={user.id} className="bg-white p-6 rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold mb-2">{user.fullName}</h2>
+                <p><strong>NRC:</strong> {maskNRC(user.nrcNumber)}</p>
+                <p><strong>DOB:</strong> {maskDOB()}</p>
+                <p><strong>Address:</strong> {maskAddress(user.address)}</p>
+
+                {walletAddress && (
+                  <button
+                    onClick={() => handleMint(user)}
+                    className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                  >
+                    Mint as NFT
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link
+              href="/mint"
+              className="bg-black text-white py-2 px-4 rounded hover:bg-gray-800"
             >
-              Connect Wallet
-            </button>
-          ) : (
-            <p className="text-sm text-gray-600 truncate max-w-xs mx-auto">
-              Connected: {walletAddress}
-            </p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
-          {users.map((user) => (
-            <div key={user.id} className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-2">{user.fullName}</h2>
-              <p><strong>NRC:</strong> {maskNRC(user.nrcNumber)}</p>
-              <p><strong>DOB:</strong> {maskDOB()}</p>
-              <p><strong>Address:</strong> {maskAddress(user.address)}</p>
-
-              {walletAddress && (
-                <button
-                  onClick={() => handleMint(user)}
-                  className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                >
-                  Mint as NFT
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center">
-          <Link
-            href="/mint"
-            className="bg-black text-white py-2 px-4 rounded hover:bg-gray-800"
-          >
-            See More
-          </Link>
+              See More
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  );
 }
