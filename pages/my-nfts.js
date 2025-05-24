@@ -4,12 +4,23 @@ import { useRouter } from 'next/router';
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 import { Metaplex } from '@metaplex-foundation/js';
 import Head from 'next/head';
+import { useAuth } from '../lib/AuthContext';
 
 export default function MyNFTs() {
+  const { user, role, loading: authLoading } = useAuth();
   const [walletAddress, setWalletAddress] = useState(null);
   const [nfts, setNfts] = useState([]);
+  const [isWalletLoading, setIsWalletLoading] = useState(true);
   const router = useRouter();
 
+  // Role check + redirect
+  useEffect(() => {
+    if (!authLoading && (!user || role !== 'admin')) {
+      router.replace('/unauthorized'); // or show a custom message below
+    }
+  }, [user, role, authLoading, router]);
+
+  // Connect to Phantom wallet
   useEffect(() => {
     const connectWallet = async () => {
       if (window.solana && window.solana.isPhantom) {
@@ -23,11 +34,15 @@ export default function MyNFTs() {
         alert('Phantom Wallet not found. Please install it.');
         router.push('/');
       }
+      setIsWalletLoading(false);
     };
 
-    connectWallet();
-  }, [router]);
+    if (!authLoading && user && role === 'admin') {
+      connectWallet();
+    }
+  }, [authLoading, user, role, router]);
 
+  // Fetch NFTs
   useEffect(() => {
     const fetchNFTs = async () => {
       if (!walletAddress) return;
@@ -41,9 +56,37 @@ export default function MyNFTs() {
       setNfts(nftList);
     };
 
-    fetchNFTs();
+    if (walletAddress) fetchNFTs();
   }, [walletAddress]);
 
+  // Handle loading
+  if (authLoading || isWalletLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-xl animate-pulse">Loading your NFTs...</p>
+      </div>
+    );
+  }
+
+  // Handle unauthorized access gracefully (fallback if redirect fails)
+  if (!user || role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center text-center p-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">403 – Unauthorized</h1>
+          <p className="mb-4">You don't have access to view this page.</p>
+          <button
+            className="bg-white text-black px-4 py-2 rounded"
+            onClick={() => router.push('/')}
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Main NFT Display
   return (
     <>
       <Head>

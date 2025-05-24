@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 import {
   useWallet,
@@ -11,7 +11,6 @@ import {
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import {
   Metaplex,
-  keypairIdentity,
 } from '@metaplex-foundation/js';
 import { Connection, clusterApiUrl } from '@solana/web3.js';
 
@@ -20,22 +19,43 @@ export default function MintPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
-  const { publicKey, signTransaction, signAllTransactions } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
 
   const connection = new Connection(clusterApiUrl('devnet'));
   const metaplex = Metaplex.make(connection);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
+    const checkUser = async (user) => {
+      try {
+        // FIXED: Check the 'users' collection instead of 'roles'
+        const roleDoc = await getDoc(doc(db, 'users', user.uid));
+        if (roleDoc.exists() && roleDoc.data().role === 'admin') {
+          setIsAdmin(true);
+        } else {
+          alert('Access denied: Admins only.');
+          router.push('/');
+        }
+      } catch (error) {
+        console.error('Error checking role:', error);
+        alert('Error checking role. Please try again later.');
+        router.push('/');
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         router.push('/login');
       } else {
-        setCheckingAuth(false);
+        checkUser(user);
       }
     });
+
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -53,8 +73,8 @@ export default function MintPage() {
       }
     };
 
-    fetchAllUsers();
-  }, []);
+    if (isAdmin) fetchAllUsers();
+  }, [isAdmin]);
 
   const handleMint = async (fullName) => {
     if (!publicKey || !signTransaction) {
