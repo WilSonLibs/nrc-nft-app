@@ -5,11 +5,12 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
 import Link from 'next/link';
 import Head from 'next/head';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export default function Home() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [users, setUsers] = useState([]);
-  const { user, setWalletAddress, walletAddress } = useAuth(); // useAuth
+  const { user, walletAddress } = useAuth();
   const router = useRouter();
 
   // Authentication check
@@ -35,30 +36,6 @@ export default function Home() {
 
     fetchUsers();
   }, []);
-
-  // Connect Phantom Wallet
-  const connectWallet = async () => {
-    if (typeof window !== 'undefined') {
-      const isPhantomInstalled = window.solana?.isPhantom;
-
-      if (!isPhantomInstalled) {
-        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-        if (isMobile) {
-          alert("Phantom Wallet not detected. Open this site inside the Phantom app’s browser.");
-        } else {
-          alert("Phantom Wallet not found. Please install it from https://phantom.app/");
-        }
-        return;
-      }
-
-      try {
-        const resp = await window.solana.connect();
-        setWalletAddress(resp.publicKey.toString());
-      } catch (err) {
-        console.error("Wallet connection failed:", err);
-      }
-    }
-  };
 
   // Mint NFT
   const handleMint = async (user) => {
@@ -104,7 +81,6 @@ export default function Home() {
     return address.slice(0, 3) + '****' + address.slice(-2);
   };
 
-  // Show loader while checking auth
   if (checkingAuth) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
@@ -133,18 +109,7 @@ export default function Home() {
           </p>
 
           <div className="text-center mb-12">
-            {!walletAddress ? (
-              <button
-                onClick={connectWallet}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-900 transition duration-200"
-              >
-                Connect Wallet
-              </button>
-            ) : (
-              <p className="text-sm text-gray-600 truncate max-w-xs mx-auto">
-                Connected: {walletAddress}
-              </p>
-            )}
+            <WalletMultiButton />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
