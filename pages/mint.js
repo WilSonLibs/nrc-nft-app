@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import {
   useWallet,
 } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import {
   Metaplex,
   keypairIdentity,
@@ -67,7 +68,10 @@ export default function MintPage() {
 
       const { nft } = await metaplex
         .candyMachines()
-        .mint({ candyMachine: { address: CANDY_MACHINE_ID }, collectionUpdateAuthority: publicKey });
+        .mint({
+          candyMachine: { address: CANDY_MACHINE_ID },
+          collectionUpdateAuthority: publicKey,
+        });
 
       alert(`Minted NFT for ${fullName}!\nTX: ${nft.address.toBase58()}`);
     } catch (error) {
@@ -89,6 +93,10 @@ export default function MintPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6 text-center">Registered NRC Users</h1>
+
+      <div className="flex justify-center mb-6">
+        <WalletMultiButton />
+      </div>
 
       <div className="mb-6 flex justify-center">
         <input
@@ -117,11 +125,12 @@ export default function MintPage() {
 
             <button
               className={`mt-4 py-1 px-3 rounded font-semibold ${
-                publicKey ? 'bg-green-600 text-white' : 'bg-black text-white'
-              }`}
+                publicKey ? 'bg-green-600' : 'bg-gray-400'
+              } text-white`}
               onClick={() => handleMint(user.fullName)}
+              disabled={!publicKey}
             >
-              {publicKey ? 'Mint NFT' : 'Connect Wallet'}
+              Mint NFT
             </button>
           </motion.div>
         ))}
