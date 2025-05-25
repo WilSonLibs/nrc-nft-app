@@ -5,14 +5,10 @@ import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { motion } from 'framer-motion';
-import {
-  useWallet,
-} from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import {
-  Metaplex,
-} from '@metaplex-foundation/js';
-import { Connection, clusterApiUrl } from '@solana/web3.js';
+import { Metaplex } from '@metaplex-foundation/js';
+import { Connection, clusterApiUrl, PublicKey } from '@solana/web3.js';
 
 export default function MintPage() {
   const [users, setUsers] = useState([]);
@@ -29,7 +25,6 @@ export default function MintPage() {
   useEffect(() => {
     const checkUser = async (user) => {
       try {
-        // FIXED: Check the 'users' collection instead of 'roles'
         const roleDoc = await getDoc(doc(db, 'users', user.uid));
         if (roleDoc.exists() && roleDoc.data().role === 'admin') {
           setIsAdmin(true);
@@ -83,8 +78,7 @@ export default function MintPage() {
     }
 
     try {
-      // Replace with your actual Candy Machine ID
-      const CANDY_MACHINE_ID = 'YourCandyMachineAddressHere';
+      const CANDY_MACHINE_ID = new PublicKey('YOUR_REAL_CANDY_MACHINE_ADDRESS');
 
       const { nft } = await metaplex
         .candyMachines()
