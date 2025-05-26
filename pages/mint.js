@@ -9,7 +9,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Metaplex } from '@metaplex-foundation/js';
 import { Connection, clusterApiUrl } from '@solana/web3.js';
-import { mintFlashcardNFT } from '@/lib/mintFlashcardNFT';
+import { mintFlashcardNFT } from '../lib/mintFlashcardNFT';
 
 export default function MintPage() {
   const [users, setUsers] = useState([]);
