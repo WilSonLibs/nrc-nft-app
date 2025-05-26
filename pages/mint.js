@@ -8,7 +8,8 @@ import { motion } from 'framer-motion';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Metaplex } from '@metaplex-foundation/js';
-import { Connection, clusterApiUrl, PublicKey } from '@solana/web3.js';
+import { Connection, clusterApiUrl } from '@solana/web3.js';
+import { mintFlashcardNFT } from '@/lib/mintFlashcardNFT';
 
 export default function MintPage() {
   const [users, setUsers] = useState([]);
@@ -71,23 +72,24 @@ export default function MintPage() {
     if (isAdmin) fetchAllUsers();
   }, [isAdmin]);
 
-  const handleMint = async (fullName) => {
+  const handleMint = async (user) => {
     if (!publicKey || !signTransaction) {
       alert("Please connect your wallet first.");
       return;
     }
 
     try {
-      const CANDY_MACHINE_ID = new PublicKey('YOUR_REAL_CANDY_MACHINE_ADDRESS');
+      const elementId = `nrc-card-${user.id}`;
 
-      const { nft } = await metaplex
-        .candyMachines()
-        .mint({
-          candyMachine: { address: CANDY_MACHINE_ID },
-          collectionUpdateAuthority: publicKey,
-        });
+      const nft = await mintFlashcardNFT({
+        elementId,
+        title: `${user.fullName} - NRC Card`,
+        userData: user,
+        wallet: { publicKey },
+        metaplex,
+      });
 
-      alert(`Minted NFT for ${fullName}!\nTX: ${nft.address.toBase58()}`);
+      alert(`Minted NFT for ${user.fullName}\nAddress: ${nft.address.toBase58()}`);
     } catch (error) {
       console.error('Mint failed:', error);
       alert('Minting failed. Check console.');
@@ -126,6 +128,7 @@ export default function MintPage() {
         {filteredUsers.map((user, index) => (
           <motion.div
             key={user.id}
+            id={`nrc-card-${user.id}`} // This is used to capture DOM element for NFT image
             className="border shadow-lg rounded-xl p-4 bg-white"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -141,7 +144,7 @@ export default function MintPage() {
               className={`mt-4 py-1 px-3 rounded font-semibold ${
                 publicKey ? 'bg-green-600' : 'bg-gray-400'
               } text-white`}
-              onClick={() => handleMint(user.fullName)}
+              onClick={() => handleMint(user)}
               disabled={!publicKey}
             >
               Mint NFT
